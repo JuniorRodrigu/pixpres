@@ -61,6 +61,7 @@ const Home = () => {
         {/* Renderizar as instâncias do componente Produtor com base nos dados */}
         {dados.map((item, index) => (
           <Produtor key={index} imageUrl={item.imageUrl} />
+
         ))}
       </div>
     </div>

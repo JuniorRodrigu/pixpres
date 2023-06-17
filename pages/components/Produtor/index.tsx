@@ -5,7 +5,7 @@ import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
 const firebaseConfig = {
-   apiKey: "AIzaSyDz91V8iQGtKLc8C8TzhRwGOL2soBtsMXo",
+  apiKey: "AIzaSyDz91V8iQGtKLc8C8TzhRwGOL2soBtsMXo",
   authDomain: "testedelyv.firebaseapp.com",
   projectId: "testedelyv",
   storageBucket: "testedelyv.appspot.com",
@@ -14,8 +14,7 @@ const firebaseConfig = {
 export default function Produtor({ imageUrl }) {
   const [progress, setProgress] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [title, setTitle] = useState('');
-  const [value, setValue] = useState('');
+  const [dados, setDados] = useState({ title: '', value: '' });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -26,50 +25,47 @@ export default function Produtor({ imageUrl }) {
           return prevProgress;
         }
       });
-    }, 100); // Ajustado o intervalo para 1000ms (1 segundo) dividido por 100
+    }, 100); // Ajustado o intervalo para 1000ms (1 segundo)
 
-    // Inicializar o app do Firebase
-    initializeApp(firebaseConfig);
+    const fetchData = async () => {
+      // Inicializar o app do Firebase
+      initializeApp(firebaseConfig);
 
-    // Configurar o Firebase Storage
-    const storage = getStorage();
+      // Configurar o Firebase Storage
+      const storage = getStorage();
 
-    // Referência para o arquivo no Firebase Storage
-    const storageRef = ref(storage, imageUrl);
+      // Referência para o arquivo no Firebase Storage
+      const storageRef = ref(storage, imageUrl);
 
-    // Obter a URL de download da imagem
-    getDownloadURL(storageRef)
-      .then((url) => {
+      // Obter a URL de download da imagem
+      try {
+        const url = await getDownloadURL(storageRef);
         setImageLoaded(true);
         // Fazer algo com a URL, se necessário
-      })
-      .catch((error) => {
+      } catch (error) {
         console.log('Erro ao obter a URL da imagem:', error);
-      });
+      }
 
-    // Configurar o Firestore
-    const db = getFirestore();
+      // Configurar o Firestore
+      const db = getFirestore();
 
-    // Referência para a coleção "dados"
-    const dadosCollection = collection(db, 'dados');
+      // Referência para a coleção "dados"
+      const dadosCollection = collection(db, 'dados');
 
-    // Obter todos os documentos da coleção "dados"
-    getDocs(dadosCollection)
-      .then((querySnapshot) => {
+      // Obter todos os documentos da coleção "dados"
+      try {
+        const querySnapshot = await getDocs(dadosCollection);
         const data = querySnapshot.docs.map((doc) => doc.data());
-
-        // Acessar os campos "title" e "value" do primeiro documento (índice 0)
-        const firstItem = data[0];
-        const title = firstItem.title;
-        const value = firstItem.value;
-
-        // Atribuir os valores aos estados do componente
-        setTitle(title);
-        setValue(value);
-      })
-      .catch((error) => {
+        const item = data.find((item) => item.imageUrl === imageUrl);
+        if (item) {
+          setDados(item);
+        }
+      } catch (error) {
         console.log('Erro ao obter os dados do Firestore:', error);
-      });
+      }
+    };
+
+    fetchData();
 
     return () => {
       clearInterval(timer);
@@ -104,8 +100,8 @@ export default function Produtor({ imageUrl }) {
         <div className={style.img}>
           <img src={imageUrl} alt="" />
         </div>
-        <h3>{title}</h3>
-        <h4>Valor R${value}</h4>
+        <h3>{dados.title}</h3>
+        <h4>Valor R${dados.value}</h4>
         <div className={style.progressBar}>
           <div className={style.progressFill} style={{ width: `${progress}%` }}>
             {progress}%
