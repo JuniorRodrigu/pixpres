@@ -14,19 +14,9 @@ const firebaseConfig = {
 export default function Produtor({ imageUrl }) {
   const [progress, setProgress] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [dados, setDados] = useState({ title: '', value: '' });
+  const [dados, setDados] = useState({ title: '', value: 0 });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress < 34) {
-          return prevProgress + 1;
-        } else {
-          return prevProgress;
-        }
-      });
-    }, 100); // Ajustado o intervalo para 1000ms (1 segundo)
-
     const fetchData = async () => {
       // Inicializar o app do Firebase
       initializeApp(firebaseConfig);
@@ -59,6 +49,18 @@ export default function Produtor({ imageUrl }) {
         const item = data.find((item) => item.imageUrl === imageUrl);
         if (item) {
           setDados(item);
+          const percentage = (item.valop / item.value) * 100;
+
+          const timer = setInterval(() => {
+            setProgress((prevProgress) => {
+              if (prevProgress < percentage) {
+                return prevProgress + 1;
+              } else {
+                clearInterval(timer);
+                return prevProgress;
+              }
+            });
+          }, 100);
         }
       } catch (error) {
         console.log('Erro ao obter os dados do Firestore:', error);
@@ -66,10 +68,6 @@ export default function Produtor({ imageUrl }) {
     };
 
     fetchData();
-
-    return () => {
-      clearInterval(timer);
-    };
   }, [imageUrl]);
 
   if (!imageLoaded) {
@@ -101,7 +99,7 @@ export default function Produtor({ imageUrl }) {
           <img src={imageUrl} alt="" />
         </div>
         <h3>{dados.title}</h3>
-        <h4>Valor R${dados.value}</h4>
+        <p className={style.valor}>Valor R${dados.value}</p>
         <div className={style.progressBar}>
           <div className={style.progressFill} style={{ width: `${progress}%` }}>
             {progress}%

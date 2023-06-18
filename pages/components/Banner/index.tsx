@@ -13,7 +13,6 @@ const firebaseConfig = {
   authDomain: "testedelyv.firebaseapp.com",
   projectId: "testedelyv",
   storageBucket: "testedelyv.appspot.com",
-  
 };
 
 if (!firebase.apps.length) {
